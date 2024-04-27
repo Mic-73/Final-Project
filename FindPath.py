@@ -4,6 +4,8 @@
 ####
 #### AI, Spring 2024
 #######################################################
+import sys
+import re
 import tkinter as tk
 from PIL import ImageTk, Image, ImageOps
 from queue import PriorityQueue
@@ -25,6 +27,9 @@ class Cell:
         self.h = 0
         self.f = float("inf")
         self.parent = None
+        self.ward = None
+        self.priority = None
+
 
     #### Compare two cells based on their evaluation functions
     def __lt__(self, other):
@@ -35,12 +40,12 @@ class Cell:
 # A maze is a grid of size rows X cols
 ######################################################
 class MazeGame:
-    def __init__(self, root, maze):
+    def __init__(self, root, maze, file):
         self.root = root
         self.maze = maze
 
-        self.rows = len(maze)
-        self.cols = len(maze[0])
+        self.rows = 30
+        self.cols = 36
 
         #### Start state: (0,0) or top left
         self.agent_pos = (0, 0)
@@ -50,10 +55,17 @@ class MazeGame:
 
         self.cells = [[Cell(x, y, maze[x][y] == 1) for y in range(self.cols)] for x in range(self.rows)]
 
+        self.algorithm, start, delivery = self.file_read(file)
+
         #### Start state's initial values for f(n) = g(n) + h(n)
         self.cells[self.agent_pos[0]][self.agent_pos[1]].g = 0
-        self.cells[self.agent_pos[0]][self.agent_pos[1]].h = self.heuristic(self.agent_pos)
-        self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.heuristic(self.agent_pos)
+        if (self.algorithm=="A*"):
+            self.cells[self.agent_pos[0]][self.agent_pos[1]].h = self.a_star_heuristic(self.agent_pos)
+            self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.a_star_heuristic(self.agent_pos)
+
+        if (self.algorithm=="dijkstra"):
+            self.cells[self.agent_pos[0]][self.agent_pos[1]].h = self.dijkstra_heuristic(self.agent_pos)
+            self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.dijkstra_heuristic(self.agent_pos)
 
         #### The maze cell size in pixels
         self.cell_size = 75
@@ -64,6 +76,29 @@ class MazeGame:
 
         #### Display the optimum path in the maze
         self.find_path()
+
+    #Needs a lot of work
+    def file_read(self, file):
+        all_lines = []
+        with open(file, 'r') as file:
+            for line in file:
+                all_lines.append(line.strip())
+            algorithm = None
+            start = None
+            delivery = None
+            for line in all_lines:
+                if (all_lines[line].startswith('Delivery algorithm:')):
+                    algorithm = all_lines[line].split(':')[1].strip()
+
+                elif (all_lines[line].startswith('Start location:')):
+                    start=re.match(r'Start location:\s*\((\d+),\s*(\d+)\)',all_lines[line])
+                    if (start!=None):
+                        start=all_lines[line].split(':')[1]
+
+                elif (all_lines[line].startswith('Delivery location:')):
+                    delivery_match = re.findall(r'\((\d+),\s*(\d+)\)', all_lines[line])
+                    delivery= [(match.group(1), match.group(2)) for match in delivery_match]
+            return algorithm, start, delivery
 
     ############################################################
     #### This is for the GUI part. No need to modify this unless
@@ -83,8 +118,11 @@ class MazeGame:
     ############################################################
     #### Manhattan distance
     ############################################################
-    def heuristic(self, pos):
+    def a_star_heuristic(self, pos):
         return (abs(pos[0] - self.goal_pos[0]) + abs(pos[1] - self.goal_pos[1]))
+
+    def dijkstra_heuristic(self, pos):
+        return 0
 
     ############################################################
     #### A* Algorithm
@@ -120,7 +158,10 @@ class MazeGame:
                         self.cells[new_pos[0]][new_pos[1]].g = new_g
 
                         ### Update the heurstic h()
-                        self.cells[new_pos[0]][new_pos[1]].h = self.heuristic(new_pos)
+                        if (self.algorithm=="A*"):
+                            self.cells[new_pos[0]][new_pos[1]].h = self.heuristic(new_pos)
+                        if (self.algorithm=="Dijkstra"):
+                            self.cells[new_pos[0]][new_pos[1]].h = self.heuristic(new_pos)
 
                         ### Update the evaluation function for the cell n: f(n) = g(n) + h(n)
                         self.cells[new_pos[0]][new_pos[1]].f = new_g + self.cells[new_pos[0]][new_pos[1]].h
