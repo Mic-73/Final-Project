@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 
 # Load the image
-image = cv2.imread('floorplanwgrid.jpg')
+image = cv2.imread('floor_plan.jpg')
 
 # Check if the image was loaded successfully
 if image is None:
