@@ -30,9 +30,9 @@ binary = cv2.bitwise_not(binary)
 matrix = (binary / 255).astype(int)
 
 # Save the matrix into a text file
-np.savetxt('floorplan_matrix.txt', matrix, fmt='%d')
+np.savetxt('wall_matrix.txt', matrix, fmt='%d')
 
-print("Matrix saved to floorplan_matrix.txt")
+print("Matrix saved to wall_matrix.txt")
 
 
 
