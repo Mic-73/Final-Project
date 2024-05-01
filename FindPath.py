@@ -40,7 +40,7 @@ class Cell:
 # A maze is a grid of size rows X cols
 ######################################################
 class MazeGame:
-    def __init__(self, root, maze):
+    def __init__(self, root, maze, file):
         self.root = root
         self.maze = maze
 
@@ -55,7 +55,7 @@ class MazeGame:
 
         self.cells = [[Cell(x, y, maze[x][y] == 1) for y in range(self.cols)] for x in range(self.rows)]
 
-        #self.algorithm, start, delivery = self.file_read(file)
+        self.algorithm, self.start, self.delivery = self.file_read(file)
 
         delivery_locations = PriorityQueue()
 
@@ -64,13 +64,13 @@ class MazeGame:
 
         #### Start state's initial values for f(n) = g(n) + h(n)
         self.cells[self.agent_pos[0]][self.agent_pos[1]].g = 0
-        '''if (self.algorithm=="A*"):
+        if (self.algorithm=="A*"):
             self.cells[self.agent_pos[0]][self.agent_pos[1]].h = self.a_star_heuristic(self.agent_pos)
             self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.a_star_heuristic(self.agent_pos)
 
         if (self.algorithm=="dijkstra"):
             self.cells[self.agent_pos[0]][self.agent_pos[1]].h = self.dijkstra_heuristic(self.agent_pos)
-            self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.dijkstra_heuristic(self.agent_pos)'''
+            self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.dijkstra_heuristic(self.agent_pos)
 
         #### The maze cell size in pixels
         self.cell_size = 30
@@ -91,18 +91,18 @@ class MazeGame:
             algorithm = None
             start = None
             delivery = None
-            for line in all_lines:
-                if (all_lines[line].startswith('Delivery algorithm:')):
-                    algorithm = all_lines[line].split(':')[1].strip()
+            if all_lines[0].startswith('Delivery algorithm:'):
+                algorithm = all_lines[0].split(':')[1].strip()
 
-                elif (all_lines[line].startswith('Start location:')):
-                    start=re.match(r'Start location:\s*\((\d+),\s*(\d+)\)',all_lines[line])
-                    if (start!=None):
-                        start=all_lines[line].split(':')[1]
+            if all_lines[1].startswith('Start location:'):
+                start = re.match(r'Start location:\s*\((\d+),\s*(\d+)\)', all_lines[1])
+                if (start != None):
+                   start=all_lines[1].split(':')[1].strip()
 
-                elif (all_lines[line].startswith('Delivery location:')):
-                    delivery_match = re.findall(r'\((\d+),\s*(\d+)\)', all_lines[line])
-                    delivery= [(match.group(1), match.group(2)) for match in delivery_match]
+            if all_lines[2].startswith('Delivery locations:'):
+                delivery = re.findall(r'\s*\((\d+),\s*(\d+)\)', all_lines[2])
+                delivery = [(int(x), int(y)) for x, y in delivery]
+
             return algorithm, start, delivery
 
     ############################################################
@@ -188,10 +188,10 @@ class MazeGame:
                         self.cells[new_pos[0]][new_pos[1]].g = new_g
 
                         ### Update the heurstic h()
-                        '''if (self.algorithm=="A*"):
+                        if (self.algorithm=="A*"):
                             self.cells[new_pos[0]][new_pos[1]].h = self.a_star_heuristic(new_pos)
                         if (self.algorithm=="Dijkstra"):
-                            self.cells[new_pos[0]][new_pos[1]].h = self.dijkstra_heuristic(new_pos)'''
+                            self.cells[new_pos[0]][new_pos[1]].h = self.dijkstra_heuristic(new_pos)
 
                         ### Update the evaluation function for the cell n: f(n) = g(n) + h(n)
                         self.cells[new_pos[0]][new_pos[1]].f = new_g + self.cells[new_pos[0]][new_pos[1]].h
@@ -309,7 +309,7 @@ maze = [
 root = tk.Tk()
 root.title("A* Maze")
 
-game = MazeGame(root, maze)
+game = MazeGame(root, maze, 'inputfile.txt')
 root.bind("<KeyPress>", game.move_agent)
 
 root.mainloop()
