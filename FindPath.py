@@ -27,7 +27,6 @@ class Cell:
         self.h = 0
         self.f = float("inf")
         self.parent = None
-        self.ward = None
         self.priority = None
 
 
@@ -47,17 +46,39 @@ class MazeGame:
         self.rows = 30
         self.cols = 36
 
+        self.cells = [[Cell(x, y, maze[x][y] == 1) for y in range(self.cols)] for x in range(self.rows)]
+
+
         self.algorithm, self.start, self.delivery = self.file_read(file)
 
+        for i in range(self.rows):
+            for j in range(self.cols):
+                if (maze[i][j] == 'u' or maze[i][j] == 'e' or maze[i][j] == 'o' or maze[i][j] == 'b'):
+                    self.cells[i][j].priority = -5
+                elif (maze[i][j] == 's' or maze[i][j] == 'm'):
+                    self.cells[i][j].priority = -4
+                elif (maze[i][j] == 'h' or maze[i][j] == 'p'):
+                    self.cells[i][j].priority = -3
+                elif (maze[i][j] == 'd' or maze[i][j] == 'g'):
+                    self.cells[i][j].priority = -2
+                elif (maze[i][j] == 'a' or maze[i][j] == 'i'):
+                    self.cells[i][j].priority = -1
+                else:
+                    self.cells[i][j].priority = 0
+
         delivery_locations = PriorityQueue()
+
+        for i in self.delivery:
+            delivery_locations.put((self.cells[i[0]][i[1]].priority, i))
+
 
         #### Start state: (0,0) or top left
         self.agent_pos = eval(self.start)
 
         #### Goal state:  (rows-1, cols-1) or bottom right
+        print(delivery_locations.get())
+        print(delivery_locations.get())
         self.goal_pos = self.delivery[1]
-
-        self.cells = [[Cell(x, y, maze[x][y] == 1) for y in range(self.cols)] for x in range(self.rows)]
 
         self.goals_completed = []
         self.goals_failed = []
@@ -104,6 +125,24 @@ class MazeGame:
                 delivery = [(int(x), int(y)) for x, y in delivery]
 
             return algorithm, start, delivery
+
+    def assign_priorities(self):
+        for i in range(self.cols):
+            for j in range(self.rows):
+                if(self.cells[i][j] == 'u' or self.cells[i][j] == 'e' or self.cells[i][j] == 'o' or self.cells[i][j] == 'b'):
+                    self.cells[i][j].priority = 5
+                elif(self.cells[i][j] == 's' or self.cells[i][j] == 'm'):
+                    self.cells[i][j].priority = 4
+                elif (self.cells[i][j] == 'h' or self.cells[i][j] == 'p'):
+                    self.cells[i][j].priority = 3
+                elif (self.cells[i][j] == 'd' or self.cells[i][j] == 'g'):
+                    self.cells[i][j].priority = 2
+                elif (self.cells[i][j] == 'a' or self.cells[i][j] == 'i'):
+                    self.cells[i][j].priority = 1
+                else:
+                    self.cells[i][j].priority = 0
+
+
 
     ############################################################
     #### This is for the GUI part. No need to modify this unless
