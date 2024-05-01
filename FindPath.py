@@ -40,10 +40,9 @@ class Cell:
 # A maze is a grid of size rows X cols
 ######################################################
 class MazeGame:
-    def __init__(self, root, maze, wards, file):
+    def __init__(self, root, maze):
         self.root = root
         self.maze = maze
-        self.wards = wards
 
         self.rows = 30
         self.cols = 36
@@ -56,7 +55,7 @@ class MazeGame:
 
         self.cells = [[Cell(x, y, maze[x][y] == 1) for y in range(self.cols)] for x in range(self.rows)]
 
-        self.algorithm, start, delivery = self.file_read(file)
+        #self.algorithm, start, delivery = self.file_read(file)
 
         delivery_locations = PriorityQueue()
 
@@ -65,16 +64,16 @@ class MazeGame:
 
         #### Start state's initial values for f(n) = g(n) + h(n)
         self.cells[self.agent_pos[0]][self.agent_pos[1]].g = 0
-        if (self.algorithm=="A*"):
+        '''if (self.algorithm=="A*"):
             self.cells[self.agent_pos[0]][self.agent_pos[1]].h = self.a_star_heuristic(self.agent_pos)
             self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.a_star_heuristic(self.agent_pos)
 
         if (self.algorithm=="dijkstra"):
             self.cells[self.agent_pos[0]][self.agent_pos[1]].h = self.dijkstra_heuristic(self.agent_pos)
-            self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.dijkstra_heuristic(self.agent_pos)
+            self.cells[self.agent_pos[0]][self.agent_pos[1]].f = self.dijkstra_heuristic(self.agent_pos)'''
 
         #### The maze cell size in pixels
-        self.cell_size = 75
+        self.cell_size = 30
         self.canvas = tk.Canvas(root, width=self.cols * self.cell_size, height=self.rows * self.cell_size, bg='white')
         self.canvas.pack()
 
@@ -113,13 +112,38 @@ class MazeGame:
     def draw_maze(self):
         for x in range(self.rows):
             for y in range(self.cols):
-                color = 'maroon' if self.maze[x][y] == 1 else 'white'
+                if self.maze[x][y] == 'm':
+                    color = 'deepskyblue'
+                elif self.maze[x][y] == 'g':
+                    color = 'red'
+                elif self.maze[x][y] == 'e':
+                    color = 'yellow'
+                elif self.maze[x][y] == 'u':
+                    color = 'orange'
+                elif self.maze[x][y] == 'o':
+                    color = 'mediumseagreen'
+                elif self.maze[x][y] == 'p':
+                    color = 'lightgreen'
+                elif self.maze[x][y] == 's':
+                    color = 'lightpink'
+                elif self.maze[x][y] == 'b':
+                    color = 'plum'
+                elif self.maze[x][y] == 'h':
+                    color = 'lightsalmon'
+                elif self.maze[x][y] == 'a':
+                    color = 'silver'
+                elif self.maze[x][y] == 'd':
+                    color = 'yellowgreen'
+                elif self.maze[x][y] == 'i':
+                    color = 'lightblue'
+                elif self.maze[x][y] == 1:
+                    color = 'black'
+                else:
+                    color = 'white'
                 self.canvas.create_rectangle(y * self.cell_size, x * self.cell_size, (y + 1) * self.cell_size,
                                              (x + 1) * self.cell_size, fill=color)
                 if not self.cells[x][y].is_wall:
-                    text = f'g={self.cells[x][y].g}\nh={self.cells[x][y].h}'
-                    self.canvas.create_text((y + 0.5) * self.cell_size, (x + 0.5) * self.cell_size, font=("Purisa", 12),
-                                            text=text)
+                    self.canvas.create_text((y + 0.5) * self.cell_size, (x + 0.5) * self.cell_size, font=("Purisa", 12))
 
     ############################################################
     #### Manhattan distance
@@ -164,10 +188,10 @@ class MazeGame:
                         self.cells[new_pos[0]][new_pos[1]].g = new_g
 
                         ### Update the heurstic h()
-                        if (self.algorithm=="A*"):
+                        '''if (self.algorithm=="A*"):
                             self.cells[new_pos[0]][new_pos[1]].h = self.a_star_heuristic(new_pos)
                         if (self.algorithm=="Dijkstra"):
-                            self.cells[new_pos[0]][new_pos[1]].h = self.dijkstra_heuristic(new_pos)
+                            self.cells[new_pos[0]][new_pos[1]].h = self.dijkstra_heuristic(new_pos)'''
 
                         ### Update the evaluation function for the cell n: f(n) = g(n) + h(n)
                         self.cells[new_pos[0]][new_pos[1]].f = new_g + self.cells[new_pos[0]][new_pos[1]].h
@@ -190,10 +214,8 @@ class MazeGame:
 
             # Redraw cell with updated g() and h() values
             self.canvas.create_rectangle(y * self.cell_size, x * self.cell_size, (y + 1) * self.cell_size,
-                                         (x + 1) * self.cell_size, fill='skyblue')
-            text = f'g={self.cells[x][y].g}\nh={self.cells[x][y].h}'
-            self.canvas.create_text((y + 0.5) * self.cell_size, (x + 0.5) * self.cell_size, font=("Purisa", 12),
-                                    text=text)
+                                         (x + 1) * self.cell_size, fill='blue')
+            self.canvas.create_text((y + 0.5) * self.cell_size, (x + 0.5) * self.cell_size, font=("Purisa", 12))
 
     ############################################################
     #### This is for the GUI part. No need to modify this unless
@@ -235,7 +257,7 @@ class MazeGame:
 #### Modify the wall cells to experiment with different maze
 #### configurations.
 ############################################################
-maze = [
+m = [
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
     [0, 1, 1, 1, 0, 1, 1, 1, 1, 1],
     [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
@@ -248,7 +270,7 @@ maze = [
     [0, 1, 1, 1, 1, 1, 1, 1, 1, 0]
 ]
 
-map_layout = [
+maze = [
 [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 [0, 1, 'm', 'm', 'm', 'm', 'm', 1, 'm', 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 [0, 1, 'm', 'm', 'm', 1, 'm', 'm', 'm', 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
