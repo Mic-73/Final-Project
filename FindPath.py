@@ -47,17 +47,17 @@ class MazeGame:
         self.rows = 30
         self.cols = 36
 
-        #### Start state: (0,0) or top left
-        self.agent_pos = (0, 0)
-
-        #### Goal state:  (rows-1, cols-1) or bottom right
-        self.goal_pos = (self.rows - 1, self.cols - 1)
-
-        self.cells = [[Cell(x, y, maze[x][y] == 1) for y in range(self.cols)] for x in range(self.rows)]
-
         self.algorithm, self.start, self.delivery = self.file_read(file)
 
         delivery_locations = PriorityQueue()
+
+        #### Start state: (0,0) or top left
+        self.agent_pos = eval(self.start)
+
+        #### Goal state:  (rows-1, cols-1) or bottom right
+        self.goal_pos = self.delivery[1]
+
+        self.cells = [[Cell(x, y, maze[x][y] == 1) for y in range(self.cols)] for x in range(self.rows)]
 
         self.goals_completed = []
         self.goals_failed = []
@@ -155,7 +155,7 @@ class MazeGame:
         return 0
 
     ############################################################
-    #### A* Algorithm
+    #### Algorithm
     ############################################################
     def find_path(self):
         open_set = PriorityQueue()
