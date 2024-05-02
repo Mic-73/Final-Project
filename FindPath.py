@@ -29,6 +29,15 @@ class Cell:
 
 
 class MazeGame:
+
+    def adjust_priority_for_ward(self, start_pos):
+        start_value = self.maze[start_pos[0]][start_pos[1]]  # Get the value of the starting location
+
+        for i in self.delivery:
+            x, y = i
+            if self.maze[x][y] == start_value:
+                self.cells[x][y].priority = -7  # Set a higher priority for delivery in the same ward
+
     def __init__(self, root, maze, file):
         self.root = root
         self.maze = maze
@@ -59,6 +68,8 @@ class MazeGame:
                     self.cells[i][j].priority = 0
 
         self.delivery_locations = PriorityQueue()
+
+        self.adjust_priority_for_ward(eval(self.start))
 
         for i in self.delivery:
             self.delivery_locations.put((self.cells[i[0]][i[1]].priority, i))
