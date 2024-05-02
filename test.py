@@ -39,6 +39,9 @@ class MazeGame:
 
         self.algorithm, self.start, self.delivery = self.file_read(file)
 
+        # Maintain a dictionary to keep track of pending requests in each ward
+        self.pending_requests = {}
+
         for i in range(self.rows):
             for j in range(self.cols):
                 if (maze[i][j] == 'u' or maze[i][j] == 'e' or maze[i][j] == 'o' or maze[i][j] == 'b'):
@@ -135,14 +138,69 @@ class MazeGame:
     def find_and_draw_paths(self):
         while not self.delivery_locations.empty():
             self.goal_pos = self.delivery_locations.get()[1]
-            path = self.find_path(self.agent_pos, self.goal_pos)
-            if path:
-                self.goals_completed.append(self.goal_pos)
+            ward = self.get_ward(self.goal_pos)  # Determine the ward of the current request
+            if ward not in self.pending_requests:
+                self.pending_requests[ward] = queue.Queue()
+
+            self.pending_requests[ward].put(self.goal_pos)
+
+            # Process pending requests in the current ward before moving to requests in other wards
+            if ward == self.get_ward(self.agent_pos):
+                while not self.pending_requests[ward].empty():
+                    next_goal_pos = self.pending_requests[ward].get()
+                    path = self.find_path(self.agent_pos, next_goal_pos)
+                    if path:
+                        self.goals_completed.append(next_goal_pos)
+                    else:
+                        self.goals_failed.append(next_goal_pos)
+                    self.agent_pos = next_goal_pos
             else:
-                self.goals_failed.append(self.goal_pos)
-            self.agent_pos = self.goal_pos
+                print(f"Robot nurse is not in the same ward as the pending requests in {ward}")
+
         print("Completed Goals: ", self.goals_completed)
         print("Failed Goals: ", self.goals_failed)
+
+    def get_ward(self, pos):
+        x, y = pos
+        cell_type = self.maze[x][y]
+
+        # Determine the ward based on the cell type
+        if cell_type == 'a':
+            return 'Admissions'
+        elif cell_type == 'g':
+            return 'General'
+        elif cell_type == 'e':
+            return 'Emergency'
+        elif cell_type == 'm':
+            return 'Maternity'
+        elif cell_type == 's':
+            return 'Surgical'
+        elif cell_type == 'g':
+            return 'General'
+        elif cell_type == 'o':
+            return 'Oncology'
+        elif cell_type == 'u':
+            return 'ICU'
+        elif cell_type == 'i':
+            return 'Isolation'
+        elif cell_type == 'p':
+            return 'Pediatric'
+        elif cell_type == 'b':
+            return 'Burn'
+        elif cell_type == 'h':
+            return 'Hematology'
+        elif cell_type == 'd':
+            return 'Medical'
+        else:
+            return 'Unknown Ward'
+        pass
+
+    def priority(self, pos):
+        ward = self.get_ward(pos)
+        if ward == self.get_ward(self.agent_pos):
+            return 0  # Priority for requests in the same ward
+        else:
+            return 1  # Priority for requests in other wards
 
     def find_path(self, start, end):
         open_set = PriorityQueue()
@@ -194,10 +252,16 @@ class MazeGame:
         return path
 
     def draw_path(self, path):
-        for cell in path:
+        for i, cell in enumerate(path):
             x, y = cell
+            if i == 0:  # If it's the start cell
+                color = 'green'
+            elif i == len(path) - 1:  # If it's the end cell
+                color = 'green'
+            else:
+                color = 'blue'  # or any other color for the path cells
             self.canvas.create_oval(y * self.cell_size + 5, x * self.cell_size + 5,
-                                    (y + 1) * self.cell_size - 5, (x + 1) * self.cell_size - 5, fill='blue')
+                                    (y + 1) * self.cell_size - 5, (x + 1) * self.cell_size - 5, fill=color)
 
 
 def main(file):
