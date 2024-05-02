@@ -1,8 +1,8 @@
-import queue
+#import queue
 import sys
 import re
 import tkinter as tk
-from PIL import ImageTk, Image, ImageOps
+#from PIL import ImageTk, Image, ImageOps
 from queue import PriorityQueue
 
 def main():
@@ -133,16 +133,18 @@ class MazeGame:
         return 0
 
     def find_and_draw_paths(self):
-        while not self.delivery_locations.empty():
-            self.goal_pos = self.delivery_locations.get()[1]
-            path = self.find_path(self.agent_pos, self.goal_pos)
-            if path:
-                self.goals_completed.append(self.goal_pos)
-            else:
-                self.goals_failed.append(self.goal_pos)
-            self.agent_pos = self.goal_pos
-        print("Completed Goals: ", self.goals_completed)
-        print("Failed Goals: ", self.goals_failed)
+        def draw_next_path():
+            if not self.delivery_locations.empty():
+                self.goal_pos = self.delivery_locations.get()[1]
+                path = self.find_path(self.agent_pos, self.goal_pos)
+                if path:
+                    self.goals_completed.append(self.goal_pos)
+                else:
+                    self.goals_failed.append(self.goal_pos)
+                self.agent_pos = self.goal_pos
+                self.root.after(7500, draw_next_path)
+
+        draw_next_path()
 
     def find_path(self, start, end):
         open_set = PriorityQueue()
@@ -194,10 +196,23 @@ class MazeGame:
         return path
 
     def draw_path(self, path):
-        for cell in path:
-            x, y = cell
-            self.canvas.create_oval(y * self.cell_size + 5, x * self.cell_size + 5,
-                                    (y + 1) * self.cell_size - 5, (x + 1) * self.cell_size - 5, fill='blue')
+        start_color = 'orange'  # Color for the start point
+        goal_color = 'green'  # Color for the goal point
+        path_color = 'blue'  # Color for the path
+
+        # Define a helper function to draw each circle with a delay
+        def draw_circle_with_delay(i):
+            if i < len(path):
+                x, y = path[i]
+                fill_color = start_color if i == 0 else (goal_color if i == len(path) - 1 else path_color)
+                self.canvas.create_oval(y * self.cell_size + 5, x * self.cell_size + 5,
+                                        (y + 1) * self.cell_size - 5, (x + 1) * self.cell_size - 5,
+                                        fill=fill_color)
+                # Schedule the next circle drawing after a delay
+                self.root.after(100, draw_circle_with_delay, i + 1)
+
+        # Start drawing the circles with delay, starting from index 0
+        draw_circle_with_delay(0)
 
 
 def main(file):
