@@ -1,3 +1,13 @@
+#######################################
+#//*** Authors: Michael Wood, Jack Gallagher
+#//*** Course Title: CSC 362 Artificial Intelligence Spring 2024
+#//*** Submission date: 5/12/2024
+#//*** Assignment: Final Project
+#//*** Purpose of Program: Take input values and use the A* or Dijkstra's algorithm to map out optimal paths for a
+#//***                     delivery agent from a valid starting location to one or more valid delivery locations.
+#######################################
+
+# Import necessary packages
 #import queue
 import sys
 import re
@@ -5,14 +15,9 @@ import tkinter as tk
 #from PIL import ImageTk, Image, ImageOps
 from queue import PriorityQueue
 
-def main():
-    if len(sys.argv) != 2:
-        print("Usage: python FindPath_.py inputfile.txt")
-        sys.exit(1)
-
-    input_file = sys.argv[1]
-
-
+#######################################
+# Cell class
+#######################################
 class Cell:
     def __init__(self, x, y, is_wall=False):
         self.x = x
@@ -27,88 +32,111 @@ class Cell:
     def __lt__(self, other):
         return self.f < other.f
 
+#######################################
+# Hospital Map class
+#######################################
+class HospitalMap:
 
-class MazeGame:
-
+    # Same ward priority cases
     def adjust_priority_for_ward(self, start_pos):
-        start_value = self.maze[start_pos[0]][start_pos[1]]  # Get the value of the starting location
+        # Get the value of the starting location
+        start_value = self.matrix[start_pos[0]][start_pos[1]]
 
         for i in self.delivery:
             x, y = i
-            if self.maze[x][y] == start_value:
-                self.cells[x][y].priority = -7  # Set a higher priority for delivery in the same ward
+            # Set a higher priority for delivery in the same ward
+            if self.matrix[x][y] == start_value:
+                self.cells[x][y].priority = -7
 
-    def __init__(self, root, maze, file):
+    def __init__(self, root, map, file):
+
+        # Initialize class variables
         self.root = root
-        self.maze = maze
+        self.matrix = map
         self.rows = 30
         self.cols = 36
+
+        # Stack for multiple paths found
         self.path_stack = []
+
+        # Set alternating colors for different paths found when drawn
         self.colors = ['blue', 'lightcoral', 'darkorchid', 'chocolate', 'dodgerblue', 'sienna']
         self.color_index = 0
-        self.cells = [[Cell(x, y, maze[x][y] == 1) for y in range(self.cols)] for x in range(self.rows)]
 
+        self.cells = [[Cell(x, y, map[x][y] == 1) for y in range(self.cols)] for x in range(self.rows)]
+
+        # Set variables for input values
         self.algorithm, self.start, self.delivery = self.file_read(file)
 
+        # Error checking for bad start position
         if not self.is_valid_position(self.start):
             print("Invalid starting position!")
             sys.exit(1)
 
+        # Set priority for each cell in matrix
         for i in range(self.rows):
             for j in range(self.cols):
-                if (maze[i][j] == 'u' or maze[i][j] == 'e' or maze[i][j] == 'o' or maze[i][j] == 'b'):
+                if map[i][j] == 'u' or map[i][j] == 'e' or map[i][j] == 'o' or map[i][j] == 'b':
                     self.cells[i][j].priority = -5
-                elif (maze[i][j] == 's' or maze[i][j] == 'm'):
+                elif map[i][j] == 's' or map[i][j] == 'm':
                     self.cells[i][j].priority = -4
-                elif (maze[i][j] == 'h' or maze[i][j] == 'p'):
+                elif map[i][j] == 'h' or map[i][j] == 'p':
                     self.cells[i][j].priority = -3
-                elif (maze[i][j] == 'd' or maze[i][j] == 'g'):
+                elif map[i][j] == 'd' or map[i][j] == 'g':
                     self.cells[i][j].priority = -2
-                elif (maze[i][j] == 'a' or maze[i][j] == 'i'):
+                elif map[i][j] == 'a' or map[i][j] == 'i':
                     self.cells[i][j].priority = -1
                 else:
                     self.cells[i][j].priority = 0
 
+        # Set up delivery priority queue and adjust priorities if necessary
         self.delivery_locations = PriorityQueue()
-
         self.adjust_priority_for_ward(eval(self.start))
-
         for i in self.delivery:
             self.delivery_locations.put((self.cells[i[0]][i[1]].priority, i))
 
+        # Initialize start state variables
         self.agent_pos = eval(self.start)
+
+        # Initialize stacks for completed and failed goal states (delivery locations)
         self.goals_completed = []
         self.goals_failed = []
 
-        self.completed_goals = []
-        self.failed_goals = []
-
+        # Initialize cell size and canvas for the output of the map
         self.cell_size = 30
         self.canvas = tk.Canvas(root, width=self.cols * self.cell_size, height=self.rows * self.cell_size, bg='white')
         self.canvas.pack()
 
-        self.draw_maze()
+        self.draw_map()
         self.find_and_draw_paths()
 
+    # Function for error checking start location
     def is_valid_position(self, pos):
+        if pos is None:
+            return False
+
         x, y = eval(pos)
 
         if x >= self.rows or y > self.cols:
             return False
 
-        if self.maze[x][y] == 1 or self.maze[x][y] == -2:
+        if self.matrix[x][y] == 1 or self.matrix[x][y] == -2:
             return False
 
         return True
 
+    # Function for reading the input file
     def file_read(self, file):
         all_lines = []
         with open(file, 'r') as file:
             for line in file:
                 all_lines.append(line.strip())
+
+            # Set up variables for the given algorithm, starting location, and delivery location(s)
             algorithm = None
             start = None
             delivery = None
+
             if all_lines[0].startswith('Delivery algorithm:'):
                 algorithm_text = all_lines[0].split(':')[1].strip().lower()
                 if algorithm_text == "a*":
@@ -123,8 +151,8 @@ class MazeGame:
 
             if all_lines[1].startswith('Start location:'):
                 start = re.match(r'Start location:\s*\((\d+),\s*(\d+)\)', all_lines[1])
-                if (start != None):
-                   start=all_lines[1].split(':')[1].strip()
+                if start is not None:
+                   start = all_lines[1].split(':')[1].strip()
 
             if all_lines[2].startswith('Delivery locations:'):
                 delivery = re.findall(r'\s*\((\d+),\s*(\d+)\)', all_lines[2])
@@ -132,36 +160,37 @@ class MazeGame:
 
             return algorithm, start, delivery
 
-    def draw_maze(self):
+    def draw_map(self):
+        # Set color for each cell in matrix/map
         for x in range(self.rows):
             for y in range(self.cols):
-                if self.maze[x][y] == 'm':
+                if self.matrix[x][y] == 'm':
                     color = 'deepskyblue'
-                elif self.maze[x][y] == 'g':
+                elif self.matrix[x][y] == 'g':
                     color = 'red'
-                elif self.maze[x][y] == 'e':
+                elif self.matrix[x][y] == 'e':
                     color = 'yellow'
-                elif self.maze[x][y] == 'u':
+                elif self.matrix[x][y] == 'u':
                     color = 'orange'
-                elif self.maze[x][y] == 'o':
+                elif self.matrix[x][y] == 'o':
                     color = 'mediumseagreen'
-                elif self.maze[x][y] == 'p':
+                elif self.matrix[x][y] == 'p':
                     color = 'lightgreen'
-                elif self.maze[x][y] == 's':
+                elif self.matrix[x][y] == 's':
                     color = 'lightpink'
-                elif self.maze[x][y] == 'b':
+                elif self.matrix[x][y] == 'b':
                     color = 'plum'
-                elif self.maze[x][y] == 'h':
+                elif self.matrix[x][y] == 'h':
                     color = 'lightsalmon'
-                elif self.maze[x][y] == 'a':
+                elif self.matrix[x][y] == 'a':
                     color = 'silver'
-                elif self.maze[x][y] == 'd':
+                elif self.matrix[x][y] == 'd':
                     color = 'yellowgreen'
-                elif self.maze[x][y] == 'i':
+                elif self.matrix[x][y] == 'i':
                     color = 'lightblue'
-                elif self.maze[x][y] == 1:
+                elif self.matrix[x][y] == 1:
                     color = 'black'
-                elif self.maze[x][y] == -2:
+                elif self.matrix[x][y] == -2:
                     color = 'slategrey'
                 else:
                     color = 'white'
@@ -169,10 +198,10 @@ class MazeGame:
                                              (x + 1) * self.cell_size, fill=color)
 
     def a_star_heuristic(self, pos):
-        return (abs(pos[0] - self.goal_pos[0]) + abs(pos[1] - self.goal_pos[1]))
+        return abs(pos[0] - self.goal_pos[0]) + abs(pos[1] - self.goal_pos[1])
 
     def dijkstra_heuristic(self, pos):
-        return 0
+        return pos*0
 
     def find_and_draw_paths(self):
         def draw_next_path():
@@ -196,9 +225,18 @@ class MazeGame:
 
         draw_next_path()
 
+    #####################################################
+    # Finding the path with the given input algorithm
+    #####################################################
     def find_path(self, start, end):
+
+        # Set priority queue for path
         open_set = PriorityQueue()
+
+        # Enter starting location
         open_set.put((0, start))
+
+        # Use dictionaries for storing nodes and their costs to establish the optimal paths
         came_from = {}
         cost_so_far = {}
         came_from[start] = None
@@ -213,12 +251,19 @@ class MazeGame:
                 return path
 
             for next in self.get_neighbors(current):
-                new_cost = cost_so_far[current] + 1  # cost is always 1 because all moves are valid
+                new_cost = cost_so_far[current] + 1  # goal cost is always 1 for each move
 
                 if next not in cost_so_far or new_cost < cost_so_far[next]:
                     cost_so_far[next] = new_cost
-                    priority = new_cost
-                    open_set.put((priority, next))
+
+                    # Calculate cost based on input algorithm
+                    if self.algorithm == "Dijkstra's":
+                        priority = new_cost
+                        open_set.put((priority, next))
+                    elif self.algorithm == "A*":
+                        priority = new_cost + self.a_star_heuristic(next)
+                        open_set.put((priority, next))
+
                     came_from[next] = current
 
         return None
@@ -246,8 +291,8 @@ class MazeGame:
         return path
 
     def draw_path(self, path):
-        start_color = 'gold'  # Color for the start point
-        goal_color = 'green'  # Color for the goal point
+        start_color = 'gold'  # Color for the start state
+        goal_color = 'green'  # Color for the goal state
         path_color = self.colors[self.color_index % len(self.colors)]  # Get current path color
 
         # Increment color index for the next path
@@ -272,12 +317,8 @@ def main(file):
     root = tk.Tk()
     root.title("Delivery Agent")
 
-
-
-
-
-
-    maze = [
+    # Set up 30 x 36 matrix
+    hospital_matrix = [
         [-2, 1, 1, 1, 1, 1, 1, 1, 1, 1, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2],
         [-2, 1, 'm', 'm', 'm', 'm', 'm', 1, 'm', 1, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2],
         [-2, 1, 'm', 'm', 'm', 1, 'm', 'm', 'm', 1, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2],
@@ -310,9 +351,9 @@ def main(file):
         [-2, -2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -2, -2, -2]
     ]
 
-    maze_game = MazeGame(root, maze, file)
+    HospitalMap(root, hospital_matrix, file)
     root.mainloop()
 
-
+# Accept an input file
 if __name__ == "__main__":
     main('inputfile.txt')
