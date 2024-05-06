@@ -2,7 +2,7 @@
 #//*** Author: Babak Forouraghi (taken from https://github.com/bforoura/AI/blob/main/Final_Project/convert.py)
 #//*** Edited by: Michael Wood, Jack Gallagher
 #//*** Course Title: CSC 362 Artificial Intelligence Spring 2024
-#//*** Submission Date: 5/12/2024
+#//*** Submission Date: 5/7/2024
 #//*** Assignment: Final Project
 #//*** Purpose of Program: Borrowed code used to convert a binary image to a matrix of 0s and 1s and save to a text file
 #//***                     Mainly used to help establish the matrix used for the main project
