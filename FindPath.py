@@ -1,7 +1,7 @@
 #######################################
 #//*** Authors: Michael Wood, Jack Gallagher
 #//*** Course Title: CSC 362 Artificial Intelligence Spring 2024
-#//*** Submission date: 5/12/2024
+#//*** Submission Date: 5/7/2024
 #//*** Assignment: Final Project
 #//*** Purpose of Program: Take input values and use the A* or Dijkstra's algorithm to map out optimal paths for a
 #//***                     delivery agent from a valid starting location to one or more valid delivery locations.
