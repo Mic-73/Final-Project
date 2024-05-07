@@ -1,3 +1,13 @@
+#######################################
+#//*** Author: Babak Forouraghi (taken from https://github.com/bforoura/AI/blob/main/Final_Project/convert.py)
+#//*** Edited by: Michael Wood, Jack Gallagher
+#//*** Course Title: CSC 362 Artificial Intelligence Spring 2024
+#//*** Submission Date: 5/7/2024
+#//*** Assignment: Final Project
+#//*** Purpose of Program: Created code that gives users an easier way to write to inputfile.txt and operate
+#//***                     findpath.py. Creates clickable 2d array and user input prompts that write out to said file.
+#######################################
+
 import tkinter as tk
 
 def on_click(row, col, destinations):
