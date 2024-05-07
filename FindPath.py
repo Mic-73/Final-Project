@@ -26,7 +26,6 @@ class Cell:
         self.g = float("inf")
         self.h = 0
         self.f = float("inf")
-        self.parent = None
         self.priority = None
 
     def __lt__(self, other):
