@@ -1,6 +1,5 @@
 #######################################
-#//*** Author: Babak Forouraghi (taken from https://github.com/bforoura/AI/blob/main/Final_Project/convert.py)
-#//*** Edited by: Michael Wood, Jack Gallagher
+#//*** Authors: Michael Wood, Jack Gallagher
 #//*** Course Title: CSC 362 Artificial Intelligence Spring 2024
 #//*** Submission Date: 5/7/2024
 #//*** Assignment: Final Project
